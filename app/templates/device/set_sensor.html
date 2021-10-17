@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/static/assets/libs/layui/css/layui.css"/>
+    <link rel="stylesheet" href="/static/assets/module/admin.css?v=318"/>
+    <script type="text/javascript" src="/static/assets/libs/layui/layui.js"></script>
+</head>
+
+<body class="bg-white">
+<!-- 主体内容区 -->
+<div>
+    <table class="layui-hide" id="tableList" lay-filter="tableList"></table>
+
+    <div class="text-center model-form-footer">
+        <button class="layui-btn" lay-filter="save" type="button" id="btnSave">保存</button>
+        <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">关闭</button>
+    </div>
+
+
+</div>
+<script>
+    layui.use(['table', 'form', 'layer'], function () {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form
+        var table = layui.table;
+        table = $.extend(table, {config: {checkName: 'checked'}});
+        table.render({
+            elem: '#tableList',
+            url: '/device/sensor_list?id=' + '{{ device_id }}',
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            title: '设备信息',
+            cols: [[
+                {type: 'checkbox', fixed: 'left', field: 'checked'},
+                {field: 'id', title: 'ID', width: 80, fixed: 'left', unresize: true, sort: true},
+                {field: 'sensor_name', title: '传感器名称'},
+                {field: 'field_name', title: '字段名称'},
+                {field: 'data_type', title: '数据类型'},
+                {field: 'sensor_type', title: '传感器类型'},
+            ]],
+            page: false,
+            done: function (res, curr, count) {
+
+            }
+        });
+        var index = parent.layer.getFrameIndex(window.name);//获取窗口索引
+        parent.layer.iframeAuto(index);
+        $('#btnSave').click(function () {
+            var checkStatus = table.checkStatus('tableList');
+            console.log(checkStatus.data) //获取选中行的数据
+            if (checkStatus.data.length == 0)
+                layer.msg('请先选择传感器!');
+            else {
+                var loadIndex = layer.load(2);
+                var postData = {device_id:'{{ device_id }}',data:checkStatus.data};
+                $.ajax({
+                    type: 'POST',
+                    url: '/device/set_sensor',
+                    data: JSON.stringify(postData),
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    success: function (res) {
+                        console.log(res);
+                        layer.close(loadIndex);
+                        if (res.code == 0) {
+                            layer.msg(res.msg);
+                             parent.layer.close(index);
+                        } else {
+                            layer.msg(res.msg, {
+                                icon: 2,
+                                anim: 6
+                            })
+                        }
+                    },
+                    error:function(xhr){
+                        console.log(xhr.status + xhr.statusMessage);
+                        layer.close(loadIndex);
+                        layer.msg(xhr.statusText);
+                    }
+                })
+            }
+        });
+
+    });
+</script>
+</body>
+</html>

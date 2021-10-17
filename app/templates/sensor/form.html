@@ -1,0 +1,140 @@
+{% extends 'public/form.html' %}
+{% block content %}
+    <form class="layui-form model-form">
+        <input name="id" type="hidden" value="{{ model.id }}"/>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">传感器名称：</label>
+                <div class="layui-input-inline">
+                    <input name="sensor_name" value="{{ model.sensor_name }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入传感器名称" class="layui-input" type="text"/>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">字段名称：</label>
+                <div class="layui-input-inline">
+                    <input name="field_name" value="{{ model.field_name }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入字段名称" class="layui-input" type="text"/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">数据类型：</label>
+                <div class="layui-input-inline">
+                    <input name="data_type" value="{{ model.data_type }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入数据类型" class="layui-input" type="text"/>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">小数位数：</label>
+                <div class="layui-input-inline">
+                    <input name="decimal_digit" value="{{ model.decimal_digit }}" lay-verify="required"
+                           autocomplete="off"
+                           placeholder="请输入小数位数" class="layui-input" type="number"/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">单位：</label>
+                <div class="layui-input-inline">
+                    <input name="unit" value="{{ model.unit }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入单位" class="layui-input" type="text"/>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">量程：</label>
+                <div class="layui-input-inline">
+                    <input name="min_value" value="{{ model.min_value }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入量程下限" class="layui-input" type="number"/>
+                    <input name="max_value" value="{{ model.max_value }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入量程上限" class="layui-input" type="number"/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">排序编码：</label>
+                <div class="layui-input-inline">
+                    <input name="sort_code" value="{{ model.sort_code }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入排序编码" class="layui-input" type="number"/>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">传感器类型：</label>
+                <div class="layui-input-inline">
+                    <select name="sensor_type" lay-verify="required">
+                        <option value=""></option>
+                        <option value="0" {%  if model.sensor_type==0 %} selected {% endif %}>采集数据</option>
+                        <option value="1" {%  if model.sensor_type==1 %} selected {% endif %}>设备状态</option>
+                    </select>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item text-center model-form-footer">
+            <button class="layui-btn" lay-filter="save" lay-submit="">保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog" lay-filter="off" lay-submit="">关闭</button>
+        </div>
+    </form>
+    <script src="/static/assets/libs/jquery/jquery-3.2.1.min.js"></script>
+    <script>
+
+        layui.use(['form', 'layer'], function () {
+            //var $ = layui.jquery;
+            var layer = layui.layer;
+            var form = layui.form;
+            form.render();
+
+            var index = parent.layer.getFrameIndex(window.name);//获取窗口索引
+            parent.layer.iframeAuto(index);
+
+            form.on('submit(off)',function () {
+                console.log('关闭编辑窗口 click');
+                parent.layer.close(index);
+            })
+            form.on('submit(save)', function (data) {
+                console.log('login click');
+                console.log(JSON.stringify(data.field));
+                // 网络请求
+                var loadIndex = layer.load(2);
+                console.log(JSON.stringify(data.field));
+                $.ajax({
+                    type: 'POST',
+                    url: "{{ url_for('sys.sensor_save') }}",
+                    data: JSON.stringify(data.field),
+                    contentType: "application/json",
+                    dataType: 'json',
+                    beforeSend: function () {
+                    },
+                    success: function (res) {
+                        console.log(res);
+                        layer.close(loadIndex);
+                        if (res.code == 0) {
+                            // 调用父窗口方法
+                            $('#search', parent.document).click();
+
+                            parent.layer.msg('refresh');
+                            parent.layer.close(index);
+                            return false;
+                        } else {
+                            layer.msg(res.msg, {
+                                icon: 2,
+                                anim: 6
+                            });
+
+                        }
+                    }
+                })
+
+                return false;
+            });
+        });
+
+
+    </script>
+{% endblock %}

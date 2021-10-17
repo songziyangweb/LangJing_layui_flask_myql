@@ -1,0 +1,140 @@
+{% extends 'public/layout.html' %}
+{% block content %}
+
+    <form class="layui-form toolbar">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <div class="layui-input-inline">
+                    <select id="ddDevice">
+                        <option value="0">请选择设备</option>
+                        {% for device in devices %}
+                            <option value="{{ device.id }}">{{ device.device_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-input-inline">
+                    <input type="text" lay-verify="datetime" class="layui-input" id="tbBegin" placeholder="开始时间">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-input-inline">
+                    <input type="text" lay-verify="datetime" class="layui-input" id="tbEnd" placeholder="结束时间">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-input-inline" style="width: auto;">
+                    <button id="search" class="layui-btn" lay-submit="" lay-filter="searchForm">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </form>
+    <table class="layui-hide" id="tableList" lay-filter="tableList"></table>
+    <script type="text/html" id="toolbarDemo">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" lay-event="getCheckData">获取选中行数据</button>
+            <button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>
+            <button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>
+        </div>
+    </script>
+    <script>
+        layui.use(['table', 'form', 'layer', 'laydate'], function () {
+            var $ = layui.jquery;
+            var layer = layui.layer;
+            var form = layui.form
+            var table = layui.table;
+            var laydate = layui.laydate;
+
+            laydate.render({
+                elem: '#tbBegin',
+                type: 'datetime'
+            });
+            laydate.render({
+                elem: '#tbEnd',
+                type: 'datetime'
+            });
+            /*
+
+
+             */
+            $('#search').click(function () {
+                console.log('search');
+                var device_id = $('#ddDevice').val();
+                var begin = $('#tbBegin').val();
+                var end = $('#tbEnd').val();
+                if (device_id == "0") {
+                    layer.msg('请选择设备', {
+                        icon: 2,
+                        anim: 6
+                    });
+                    return;
+                }
+                if (begin == '') {
+                    layer.msg('请填写开始时间', {
+                        icon: 2,
+                        anim: 6
+                    })
+                    return;
+                }
+                if (end == '') {
+                    layer.msg('请填写结束时间', {
+                        icon: 2,
+                        anim: 6
+                    })
+                    return;
+                }
+                console.log(device_id)
+                console.log(begin);
+
+                var index = layer.msg('查询中，请稍后...', {
+                    icon: 16,
+                    time: false,
+                    shade: 0
+                });
+                //构建表格结构
+                $.post('/his/sensor_list', {device_id: device_id}, function (res) {
+                    console.log(res);
+                    if (res.code != '0')
+                        return;
+                    var cols = res.data;
+                    table.render({
+                        elem: '#tableList',
+                        url: '/his/search',
+                        toolbar: '#toolbarDemo',
+                        defaultToolbar: ['filter', 'exports', 'print', {
+                            title: '提示',
+                            layEvent: 'LAYTABLE_TIPS',
+                            icon: 'layui-icon-tips'
+                        }],
+                    
+                        title: '设备信息',
+                        cols: [cols],
+                        page: false,
+                        height: 'full-90',
+                        cellMinWidth: 80,
+                        done: function (res, curr, count) {
+
+                        }
+                    });
+                    layer.close(index);
+                });
+
+
+                setTimeout(function () {
+                    table.reload('tableList', {
+                        url: '/monitor/list_with_data',
+                        method: 'post',
+                        where: {devicename: devicename},
+                    });
+                    layer.close(index);
+                })
+            });
+
+        })
+    </script>
+{% endblock %}

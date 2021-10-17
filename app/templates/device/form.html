@@ -1,0 +1,111 @@
+{% extends 'public/form.html' %}
+{% block content %}
+    <form class="layui-form model-form">
+        <input name="id" type="hidden" value="{{ model.id }}"/>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">传感器名称：</label>
+                <div class="layui-input-inline">
+                    <input name="device_name" value="{{ model.device_name }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入设备名称" class="layui-input" type="text"/>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">区站编码：</label>
+                <div class="layui-input-inline">
+                    <input name="site_code" value="{{ model.site_code }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入区站编码" class="layui-input" type="text"/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">设备编码：</label>
+                <div class="layui-input-inline">
+                    <input name="device_code" value="{{ model.device_code }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入设备编码" class="layui-input" type="text"/>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">地址：</label>
+                <div class="layui-input-inline">
+                    <input name="address" value="{{ model.address }}" lay-verify="required"
+                           autocomplete="off"
+                           placeholder="请输入地址" class="layui-input" type="text"/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">采样率：</label>
+                <div class="layui-input-inline">
+                    <input name="sample_period" value="{{ model.sample_period }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入采样率" class="layui-input" type="text"/>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">DTU编号：</label>
+                <div class="layui-input-inline">
+                    <input name="dtu_id" value="{{ model.dtu_id }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入dtu编号" class="layui-input" type="text"/>
+
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item text-center model-form-footer">
+            <button class="layui-btn" lay-filter="save" lay-submit="">保存</button>
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">关闭</button>
+        </div>
+    </form>
+
+    <script>
+
+        layui.use(['form', 'layer'], function () {
+            var $ = layui.jquery;
+            var layer = layui.layer;
+            var form = layui.form;
+            form.render();
+
+            var index = parent.layer.getFrameIndex(window.name);//获取窗口索引
+            parent.layer.iframeAuto(index);
+
+            form.on('submit(save)', function (data) {
+                console.log('login click');
+                console.log(JSON.stringify(data.field));
+                // 网络请求
+                var loadIndex = layer.load(2);
+                console.log(JSON.stringify(data.field));
+                $.ajax({
+                    type: 'POST',
+                    url: "{{ url_for('device.save') }}",
+                    data: JSON.stringify(data.field),
+                    contentType: "application/json",
+                    dataType: 'json',
+                    beforeSend: function () {
+                    },
+                    success: function (res) {
+                        console.log(res);
+                        layer.close(loadIndex);
+                        if (res.code == 0) {
+                            // 调用父窗口方法
+                            $('#search', parent.document).click();
+                            parent.layer.msg('refresh');
+                            parent.layer.close(index);
+                            return false;
+                        } else {
+                            layer.msg(res.msg, {
+                                icon: 2,
+                                anim: 6
+                            });
+
+                        }
+                    }
+                })
+
+                return false;
+            });
+        });
+
+
+    </script>
+{% endblock %}

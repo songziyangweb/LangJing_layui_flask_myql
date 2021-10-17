@@ -1,0 +1,93 @@
+{#
+    编辑里边的东西！
+#}
+{% extends 'public/form.html' %}
+{% block content %}
+    <form class="layui-form model-form">
+        <input name="id" type="hidden" value="{{ model.id }}">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">真实姓名：</label>
+                <div class="layui-input-inline">
+                    <input name="realname" value="{{ model.realname }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入真实姓名" class="layui-input" type="text">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">用户名：</label>
+                <div class="layui-input-inline">
+                    <input name="username" value="{{ model.username }}" lay-verify="required" autocomplete="off"
+                           placeholder="请输入用户名" class="layui-input" type="text">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">性别</label>
+                <div class="layui-input-inline">
+                    <input type="radio" name="sex" value="男" title="男" {% if model.sex=='男' %} checked {% endif %}>
+                    <input type="radio" name="sex" value="女" title="女" {% if model.sex=='女' %} checked {% endif %}>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item text-center model-form-footer">
+            <button class="layui-btn" lay-filter="save" lay-submit="">保存</button>
+            <button class="layui-btn layui-btn-primary" lay-filter="off" lay-submit="" type="button" ew-event="closeDialog">关闭</button>
+        </div>
+    </form>
+    <script src="/static/assets/libs/jquery/jquery-3.2.1.min.js"></script>
+    <script>
+        $(function () {
+            console.log('ready');
+            layui.use(['form', 'layer'], function () {
+                //var $ = layui.jquery;
+                var layer = layui.layer;
+                var form = layui.form;
+                console.log(form)
+                var index = parent.layer.getFrameIndex(window.name);//获取窗口索引
+                parent.layer.iframeAuto(index);
+                console.log('load!');
+                form.on('submit(off)',function () {
+                    console.log('关闭编辑窗口 click');
+                    parent.layer.close(index);//关闭编辑窗口
+                })
+
+                form.on('submit(save)', function (data) {//点击保存之后
+
+                    console.log(JSON.stringify(data.field));
+                    // 网络请求
+                    var loadIndex = layer.load(2);
+                    console.log(JSON.stringify(data.field));
+                    $.ajax({
+                        type: 'POST',
+                        url: "{{ url_for('sys.save') }}",
+                        data: JSON.stringify(data.field),
+                        contentType: "application/json",
+                        dataType: 'json',
+                        beforeSend: function () {
+                        },
+                        success: function (res) {
+                            console.log(res);
+                            layer.close(loadIndex);
+                            if (res.code == 0) {
+
+                                $('#search',parent.document).click(); // 调用父窗口方法，刷新数据
+
+                                parent.layer.msg('保存成功！');
+                                parent.layer.close(index); // 关闭编辑窗口
+                                return false;
+                            } else {
+                                layer.msg(res.msg, {
+                                    icon: 2,
+                                    anim: 6
+                                });
+
+                            }
+                        }
+                    })
+
+                    return false;
+                });
+            });
+
+        });
+    </script>
+{% endblock %}

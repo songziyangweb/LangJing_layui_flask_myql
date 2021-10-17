@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+{% include 'public/header.html' %}
+
+<body>
+    <div class="layui-fluid">
+        <div class="layui-card">
+            <div class="layui-card-body">
+                {% block content %}
+                {%  endblock %}
+            </div>
+        </div>
+    </div>
+
+{#{% include 'public/footer.html' %}#}
+</body>
+</html>
